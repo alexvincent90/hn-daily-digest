@@ -1,0 +1,35 @@
+name: Send HN Daily Digest
+
+on:
+  schedule:
+    # Runs at 7:00 AM UTC daily (adjust to your timezone if desired)
+    # 7 AM UTC = 11 PM Pacific / midnight Mountain / 2 AM Eastern
+    - cron: '0 14 * * *'   # 7 AM US Pacific (UTC-7 in summer, UTC-8 in winter)
+  workflow_dispatch:        # Also lets you trigger manually from GitHub UI
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run digest
+        env:
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY:     ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL:         "hn@naviwork.tools"
+          FROM_NAME:          "HN Daily Digest"
+          TOP_N:              "10"
+        run: python main.py
